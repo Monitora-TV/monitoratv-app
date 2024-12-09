@@ -1,0 +1,8 @@
+{
+  "realm": "monitoratv",
+  "auth-server-url": "https://keycloak.gustavokanashiro.com/auth",
+  "ssl-required": "external",
+  "resource": "frontend-monitoratv",
+  "public-client": true,
+  "confidential-port": 0
+}
