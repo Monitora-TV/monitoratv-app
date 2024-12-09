@@ -17,6 +17,7 @@ axiosInstance.interceptors.request.use(async config => {
     return config;
 });
 
+
 // NOTE: Meant to be used by orval generated client
 export const fetch = <T>(config: AxiosRequestConfig, options?: AxiosRequestConfig): Promise<T> =>
     axiosInstance({

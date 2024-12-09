@@ -6,9 +6,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Desfechocriancaexpostahiv } from '../../models/types';
-//import { api } from '../../apis/axiosClient';
 import axiosInstance from '../../apis/axiosInstance';
-import { fetch } from '../../apis/desfecho-crianca-api/axiosInstance';
+import { gerarNoFiltro } from '../../utils/utils';
+
+// import { fetch } from '../../apis/desfecho-crianca-api/axiosInstance';
 
 
 const columnHelper = createMRTColumnHelper<Desfechocriancaexpostahiv>();
@@ -139,44 +140,26 @@ const TableDesfechos = () => {
   return <MaterialReactTable table={table} />;
 };
 
-// CREATE hook (post new user to api)
 function useCreateDesfecho() {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (desfechocriancaexpostahiv: Desfechocriancaexpostahiv) => {
+      // Gerar automaticamente o no_filtro
+      const noFiltro = gerarNoFiltro(desfechocriancaexpostahiv.no_desfecho_criancaexposta_hiv);
+
+      // Enviar os dados para a API, incluindo o no_filtro gerado
       const response = await axiosInstance.post("/desfechocriancaexpostahiv", {
-        no_desfecho_criancaexposta_hiv: desfechocriancaexpostahiv.no_desfecho_criancaexposta_hiv,
+        no_filtro: noFiltro, // Campo gerado automaticamente
+        no_desfecho_criancaexposta_hiv: desfechocriancaexpostahiv.no_desfecho_criancaexposta_hiv, // Outro campo necessário
+        // Adicione outros campos conforme necessário
       });
+
       return response.data;
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['desfechocriancaexpostahiv'] }),
   });
 }
-
-// READ hook (get users from api)
-
-//export const getTodos = (options?: SecondParameter<typeof fetch>) => {
-//    return fetch<Todo[]>({ url: `/todos`, method: "GET" }, options);
-//};
-
-/*
-fetch('http://localhost:3000/desfechocriancaexpostahiv', {
-    method: 'GET', 
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + tokenDeAcesso, // Se necessário
-    }
-  })
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Erro:', error));
-*/
-type SecondParameter<T extends (...args: any) => any> = Parameters<T>[1];
-export const getTodos = (options?: SecondParameter<typeof fetch>) => {
-    return fetch<Desfechocriancaexpostahiv[]>({ url: `/desfechocriancaexpostahiv`, method: "GET" }, options);
-};
-
-
 
 function useGetDesfecho() {
   return useQuery<Desfechocriancaexpostahiv[]>({
@@ -190,16 +173,22 @@ function useGetDesfecho() {
   });
 }
 
-// UPDATE hook (put user in api)
 function useUpdateDesfecho() {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (desfechocriancaexpostahiv: Desfechocriancaexpostahiv) => {
-      const response = await axiosInstance.put("/desfechocriancaexpostahiv", {
-        id: desfechocriancaexpostahiv.id,
-        no_desfecho_criancaexposta_hiv: desfechocriancaexpostahiv.no_desfecho_criancaexposta_hiv,
+      // Gerar automaticamente o no_filtro a partir do campo no_desfecho_criancaexposta_hiv
+      const noFiltro = gerarNoFiltro(desfechocriancaexpostahiv.no_desfecho_criancaexposta_hiv);
+
+      // Enviar os dados para a API, incluindo o no_filtro gerado automaticamente
+      const response = await axiosInstance.patch(`/desfechocriancaexpostahiv/${desfechocriancaexpostahiv.id}`, {
+        no_filtro: noFiltro, // Campo gerado automaticamente
+        no_desfecho_criancaexposta_hiv: desfechocriancaexpostahiv.no_desfecho_criancaexposta_hiv, // Dados a serem atualizados
+        // Outros campos que você precisar atualizar
       });
-      return response.data;
+
+      return response.data; // Retorna os dados atualizados
     },
     onMutate: (newUserInfo: Desfechocriancaexpostahiv) => {
       queryClient.setQueryData(['desfechocriancaexpostahiv'], (prevUsers: Desfechocriancaexpostahiv[]) =>
@@ -212,17 +201,18 @@ function useUpdateDesfecho() {
   });
 }
 
-// DELETE hook (delete user in api)
+
 function useDeleteDesfecho() {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (desfechocriancaexpostahivId: number) => {
-      await axiosInstance.delete("/desfechocriancaexpostahiv", {
-        params: { id: desfechocriancaexpostahivId },
-      });
+      // Alterar a URL para incluir o 'id' diretamente na rota
+      await axiosInstance.delete(`/desfechocriancaexpostahiv/${desfechocriancaexpostahivId}`);
       return desfechocriancaexpostahivId;
     },
     onMutate: (desfechocriancaexpostahivId: number) => {
+      // Atualiza a lista de desfechos excluindo o item removido
       queryClient.setQueryData(['desfechocriancaexpostahiv'], (prevUsers: Desfechocriancaexpostahiv[]) =>
         prevUsers?.filter((desfechocriancaexpostahiv) => desfechocriancaexpostahiv.id !== desfechocriancaexpostahivId),
       );
@@ -230,7 +220,6 @@ function useDeleteDesfecho() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['desfechocriancaexpostahiv'] }),
   });
 }
-
 const queryClient = new QueryClient();
 
 const DesfechoCriancaExpostaHIV = () => (
