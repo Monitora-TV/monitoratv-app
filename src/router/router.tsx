@@ -2,6 +2,7 @@ import { createBrowserRouter, type LoaderFunctionArgs } from "react-router-dom";
 import Layout from '@/router/Layout';
 import Dashboard from '@/pages/Dashboard/Dashboard';
 import DesfechoCriancaExpostaHIV from '@/pages/Desfechocriancaexpostahiv/Desfechocriancaexpostahiv';
+import MonitoraCriancaExpostaHIV from '@/pages/MonitoraCriancaExpostaHiv/MonitoraCriancaExpostaHiv'; 
 import ExampleWithProviders from '@/pages/Users/gridUser';
 import ErrorPage from '@/router/ErrorPage';
 import { getOidc } from "../oidc";
@@ -27,7 +28,13 @@ export const router = createBrowserRouter([
                 path: "desfechocriancaexpostahiv",
                 Component: DesfechoCriancaExpostaHIV,
                 loader: protectedRouteLoader
+            },
+            {          
+                path: "monitoracriancaexpostahiv",
+                Component: MonitoraCriancaExpostaHIV,
+                loader: protectedRouteLoader
             }
+
         ]
     }
 ]);
@@ -44,7 +51,7 @@ async function protectedRouteLoader({ request }: LoaderFunctionArgs) {
         // The loader function is invoked by react-router before the browser URL is updated to the target protected route URL.
         // Therefore, we need to specify where the user should be redirected after the login process completes.
         //redirectUrl: request.url,
-        redirectUrl: "/Dashboard",
+        redirectUrl: "/dashboard",
 
         // Explanation:
         // The 'doesCurrentHrefRequiresAuth' parameter informs oidc-spa whether it is acceptable to redirect the user to the current URL

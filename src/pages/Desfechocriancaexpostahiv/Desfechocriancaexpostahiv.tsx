@@ -5,9 +5,9 @@ import {  Box,  Button,  DialogActions,  DialogContent,  DialogTitle,  IconButto
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Desfechocriancaexpostahiv } from '../../models/types';
-import axiosInstance from '../../apis/axiosInstance';
-import { gerarNoFiltro } from '../../utils/utils';
+import { Desfechocriancaexpostahiv } from '@/models/types';
+import axiosInstance from '@/apis/axiosInstance';
+import { gerarNoFiltro } from '@/utils/utils';
 
 // import { fetch } from '../../apis/desfecho-crianca-api/axiosInstance';
 
@@ -17,8 +17,7 @@ const columnHelper = createMRTColumnHelper<Desfechocriancaexpostahiv>();
 const TableDesfechos = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string | undefined>>({});
 
-  const columns = useMemo<MRT_ColumnDef<Desfechocriancaexpostahiv>[]>(
-    () => [
+  const columns = useMemo(() => [
       columnHelper.accessor('id', {
         header: 'Id',
         enableEditing: false,
@@ -161,7 +160,7 @@ function useCreateDesfecho() {
   });
 }
 
-function useGetDesfecho() {
+export function useGetDesfecho() {
   return useQuery<Desfechocriancaexpostahiv[]>({
     queryKey: ['desfechocriancaexpostahiv'],
     queryFn: async () => {
@@ -220,6 +219,7 @@ function useDeleteDesfecho() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['desfechocriancaexpostahiv'] }),
   });
 }
+/*
 const queryClient = new QueryClient();
 
 const DesfechoCriancaExpostaHIV = () => (
@@ -227,6 +227,10 @@ const DesfechoCriancaExpostaHIV = () => (
     <TableDesfechos />
   </QueryClientProvider>
 );
+*/
+
+const DesfechoCriancaExpostaHIV = () => ( <TableDesfechos /> );
+
 
 export default DesfechoCriancaExpostaHIV;
 
@@ -237,3 +241,4 @@ function validateUser(desfechocriancaexpostahiv: Desfechocriancaexpostahiv) {
     no_desfecho_criancaexposta_hiv: !validateRequired(desfechocriancaexpostahiv.no_desfecho_criancaexposta_hiv) ? 'Descrição is Required' : '',
   };
 }
+

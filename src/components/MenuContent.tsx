@@ -23,7 +23,7 @@ const mainListItems = [
   { text: 'Dashboard', path: 'dashboard', icon: <DashboardIcon /> },
   { text: 'Analytics', path: 'users', icon: <AnalyticsRoundedIcon /> },
   { text: 'Gestantes HIV', path: 'gestantes-hiv', icon: <PregnantWomanRoundedIcon /> },
-  { text: 'Criança Exposta HIV', path: 'crianca-hiv', icon: <ChildFriendlyOutlinedIcon /> },
+  { text: 'Criança Exposta HIV', path: 'monitoracriancaexpostahiv', icon: <ChildFriendlyOutlinedIcon /> },
 ];
 const secondaryListItems = [
   { text: 'Settings', icon: <SettingsRoundedIcon /> },

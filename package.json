@@ -23,6 +23,7 @@
     "axios": "^1.7.7",
     "buffer": "^6.0.3",
     "cookie": "^1.0.2",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
