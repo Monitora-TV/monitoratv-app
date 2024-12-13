@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MRT_EditActionButtons, MaterialReactTable, createMRTColumnHelper, 
-  MRT_TableContainer, MRT_TableHeadCellFilterContainer, 
-  type MRT_ColumnDef, type MRT_Row, type MRT_TableOptions, useMaterialReactTable } from 'material-react-table';
-import { Paper, Stack, useMediaQuery } from '@mui/material';   
+import { MRT_EditActionButtons, MaterialReactTable, type MRT_ColumnDef, type MRT_Row, type MRT_TableOptions, useMaterialReactTable } from 'material-react-table';
+import { useMediaQuery } from '@mui/material';   
 import { Box, Button, DialogActions, DialogContent, DialogTitle, IconButton, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,16 +10,41 @@ import axiosInstance from '@/apis/axiosInstance';
 import dayjs from 'dayjs'; // Importa o dayjs
 
 import { MRT_Localization_PT_BR } from 'material-react-table/locales/pt-BR';
+import { idID } from '@mui/material/locale';
+
 
 //const columnHelper = createMRTColumnHelper<MonitoraCriancaExpostaHIV>();
 
 const TableMonitoraCriancaExpostaHIV = () => {
-  const [validationErrors, setValidationErrors] = useState<Record<string, string | undefined>>({});
   const isMobile = useMediaQuery('(max-width: 1000px)');  
+
+  const [validationErrors, setValidationErrors] = useState<Record<string, string | undefined>>({});
 
   const formatDate = (date: Date) => {
     return dayjs(date).format('DD/MM/YYYY'); // Formata a data para 'dd/mm/yyyy'
   };  
+
+  const [desfechoOptions, setDesfechoOptions] = useState<{ value: number; label: string }[]>([]);  
+
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const response = await axiosInstance.get("/desfechocriancaexpostahiv");
+        const options = response.data.map((desfechoOptions: Desfechocriancaexpostahiv) => ({
+          value: desfechoOptions.id,
+          label: desfechoOptions.no_desfecho_criancaexposta_hiv,
+        }));
+        //setDesfechoOptions([{ value: null, label: "(Sem Desfecho)" }, ...options]);        
+        setDesfechoOptions(options);
+      } catch (error) {
+        console.error('Erro ao buscar os desfechos:', error);
+      }
+    };
+
+    fetchStates();
+  }, []);
+
+  console.log(desfechoOptions);
 
   const columns = useMemo<MRT_ColumnDef<MonitoraCriancaExpostaHIV>[]>(() => [
     {
@@ -34,7 +57,6 @@ const TableMonitoraCriancaExpostaHIV = () => {
       header: 'Nº SINAN',
       accessorFn: (originalRow) => (originalRow.nu_notific_sinan ?? ''), //must be strings
       muiEditTextFieldProps: {
-        required: true,
         error: !!validationErrors.nu_notific_sinan,
         helperText: validationErrors.nu_notific_sinan,
         onFocus: () => setValidationErrors((prev) => ({ ...prev, nu_notific_sinan: undefined })),
@@ -45,7 +67,7 @@ const TableMonitoraCriancaExpostaHIV = () => {
       accessorFn: (row) => formatDate(row.dt_inicio_monitoramento),      
       header: 'Início Monit.',
       muiEditTextFieldProps: {
-        required: true,
+        //required: true,
         type: ('DD/MM/YYYY'), 
         error: !!validationErrors.dt_inicio_monitoramento,
         helperText: validationErrors.dt_inicio_monitoramento,
@@ -53,24 +75,59 @@ const TableMonitoraCriancaExpostaHIV = () => {
       },
     },
     {
-      accessorKey: 'tb_paciente.no_paciente', 
-      header: 'Nome do Paciente',
+      accessorKey: 'id_paciente', 
+      header: 'id_paciente',
       muiEditTextFieldProps: {
-        required: true,
-        error: !!validationErrors.no_paciente,
-        helperText: validationErrors.no_paciente,
-        onFocus: () => setValidationErrors((prev) => ({ ...prev, no_paciente: undefined })),
+        error: !!validationErrors.id_paciente,
+        helperText: validationErrors.id_paciente,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, id_paciente: undefined })),
       },
     },
     {
+      accessorKey: 'tb_paciente.no_paciente', 
+      header: 'Nome',
+      muiEditTextFieldProps: {
+        error: !!validationErrors.tb_paciente,
+        helperText: validationErrors.tb_paciente,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, tb_paciente: undefined })),
+      },
+    },
+
+    { 
       accessorKey: 'tb_unidade_monitoramento.no_unidade',
       header: 'Unidade de Monitoramento',
       muiEditTextFieldProps: {
-        required: true,
-        error: !!validationErrors.no_unidade,
-        helperText: validationErrors.no_unidade,
-        onFocus: () => setValidationErrors((prev) => ({ ...prev, no_unidade: undefined })),
+        error: !!validationErrors.tb_unidade_monitoramento,
+        helperText: validationErrors.tb_unidade_monitoramento,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, tb_unidade_monitoramento: undefined })),
       },
+    },
+    {
+      accessorKey: 'id_unidade_monitoramento',
+      header: 'id_unidade_monitoramento',
+      
+      muiEditTextFieldProps: {
+        error: !!validationErrors.id_unidade_monitoramento,
+        helperText: validationErrors.id_unidade_monitoramento,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, id_unidade_monitoramento: undefined })),
+      },
+    },
+    {
+      accessorKey: 'id_desfecho_criexp_hiv',
+      header: 'Desfecho',
+      enableEditing: true,
+      //filterVariant: 'select',
+      Cell: ({ cell }) => {
+        const idDesfechoCriexpHiv = cell.getValue<number>(); // Ensure the type is correct
+        const selectedDesfecho = desfechoOptions.find(option => option.value === idDesfechoCriexpHiv);
+        return selectedDesfecho ? selectedDesfecho.label : 'Sem Desfecho';
+      },
+      muiEditTextFieldProps: {
+        select: true,
+        error: !!validationErrors.id_desfecho_criexp_hiv,
+        helperText: validationErrors.id_desfecho_criexp_hiv
+      },
+      editSelectOptions: desfechoOptions,
     },
     {
       accessorKey: 'tb_unidade_monitoramento.tb_coordenadoria.no_coordenadoria',
@@ -81,13 +138,12 @@ const TableMonitoraCriancaExpostaHIV = () => {
       }),
       enableFilterMatchHighlighting: false,
       muiEditTextFieldProps: {
-        required: true,
         error: !!validationErrors.no_coordenadoria,
         helperText: validationErrors.no_coordenadoria,
         onFocus: () => setValidationErrors((prev) => ({ ...prev, no_coordenadoria: undefined })),
       },
     },
-  ], [validationErrors]);
+  ], [validationErrors, desfechoOptions]);
 
   const { mutateAsync: createMonitoraCriancaExpostaHIV } = useCreateMonitoraCriancaExpostaHIV();
   const { data: fetchedMonitoraCriancaExpostaHIV = [], isLoading: isLoadingMonitoraCriancaExpostaHIV } = useGetMonitoraCriancaExpostaHIV();
@@ -125,7 +181,10 @@ const TableMonitoraCriancaExpostaHIV = () => {
   const table = useMaterialReactTable({
     columns,
     data: fetchedMonitoraCriancaExpostaHIV,
-    initialState: { showColumnFilters: true, showGlobalFilter: true },
+    initialState: { 
+      columnVisibility: {'id_unidade_monitoramento': false, 'id_paciente': false, 'id': false},
+      showColumnFilters: true, showGlobalFilter: true 
+    },
     localization: MRT_Localization_PT_BR,
     enableFacetedValues: true,
     createDisplayMode: 'modal',
@@ -236,10 +295,21 @@ function useUpdateMonitoraCriancaExpostaHIV() {
 
   return useMutation({
     mutationFn: async (monitoraCriancaExpostaHIV: MonitoraCriancaExpostaHIV) => {
-      const response = await axiosInstance.patch(`/criancaexpostahiv/${monitoraCriancaExpostaHIV.id}`, monitoraCriancaExpostaHIV);
+      const response = await axiosInstance.patch(`/criancaexpostahiv/${monitoraCriancaExpostaHIV.id}`,
+        {
+          id_desfecho_criexp_hiv: monitoraCriancaExpostaHIV.id_desfecho_criexp_hiv,
+        }
+      );
       return response.data;
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['criancaexpostahiv'] }),
+    onMutate: (newUserInfo: MonitoraCriancaExpostaHIV) => {
+      queryClient.setQueryData(['monitoraCriancaExpostaHIV'], (prevUsers: MonitoraCriancaExpostaHIV[]) =>
+        prevUsers?.map((prevUser) =>
+          prevUser.id === newUserInfo.id ? newUserInfo : prevUser,
+        ),
+      );
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['monitoraCriancaExpostaHIV'] }),
   });
 }
 
@@ -255,19 +325,23 @@ function useDeleteMonitoraCriancaExpostaHIV() {
   });
 }
 
+/*
+const queryClient = new QueryClient();
+
 const MonitoraCriancaExpostaHIVPage = () => (
   <QueryClientProvider client={new QueryClient()}>
     <TableMonitoraCriancaExpostaHIV />
   </QueryClientProvider>
 );
+*/
 
+const MonitoraCriancaExpostaHIVPage = () => ( <TableMonitoraCriancaExpostaHIV /> );
 export default MonitoraCriancaExpostaHIVPage;
 
 function validateMonitoraCriancaExpostaHIV(values: MonitoraCriancaExpostaHIV) {
   return {
-    nu_notific_sinan: !values.nu_notific_sinan ? 'Nº Notificação is required' : '',
-    dt_inicio_monitoramento: !values.dt_inicio_monitoramento ? 'Data Início is required' : '',
-    no_paciente: !values.id_paciente ? 'Nome do Paciente is required' : '',
-    no_unidade: !values.id_unidade_monitoramento ? 'Unidade de Monitoramento is required' : '',
+    dt_inicio_monitoramento: !values.dt_inicio_monitoramento ? 'Data Início obrigatória' : '',
+    id_paciente: !values.id_paciente ? 'Paciente obrigatorio' : '',
+    id_unidade_monitoramento: !values.id_unidade_monitoramento ? 'Unidade de Monitoramento obrigatoria' : '',
   };
 }

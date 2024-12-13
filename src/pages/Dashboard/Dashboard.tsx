@@ -4,14 +4,14 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 //import Example from '@features/user/gridExample';
-import TableMonitoraCriancaExpostaHIV from '@/pages/MonitoraCriancaExpostaHiv/MonitoraCriancaExpostaHiv';
+import MonitoraCriancaExpostaHIVPage from '../MonitoraCriancaExpostaHiv/MonitoraCriancaExpostaHiv';
 import HighlightedCard from '@components/HighlightedCard';
 import PageViewsBarChart from '@components/PageViewsBarChart';
 import SessionsChart from '@components/SessionsChart';
 import StatCard, { StatCardProps } from '@components/StatCard';
 import { useOidc } from "../../oidc";
 
-import SelectDesfechoCriancaExpostaHIV from '@/components/SelectDesfechoCriancaExpostaHIV'; // Importe o seu componente Select
+import SelectDesfechoCriancaExpostaHIV from '@/components/criancaexposta/SelectDesfechoCriancaExpostaHIV'; // Importe o seu componente Select
 
 
 const data: StatCardProps[] = [
@@ -85,7 +85,7 @@ export default function Dashboard() {
       </Typography>
       <Grid container spacing={2} columns={12}>
         <Grid size={{ xs: 12, lg: 12 }}>
-          <TableMonitoraCriancaExpostaHIV />
+          <MonitoraCriancaExpostaHIVPage />
         </Grid>
       </Grid>
     </Box>

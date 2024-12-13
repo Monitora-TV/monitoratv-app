@@ -219,18 +219,8 @@ function useDeleteDesfecho() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['desfechocriancaexpostahiv'] }),
   });
 }
-/*
-const queryClient = new QueryClient();
-
-const DesfechoCriancaExpostaHIV = () => (
-  <QueryClientProvider client={queryClient}>
-    <TableDesfechos />
-  </QueryClientProvider>
-);
-*/
 
 const DesfechoCriancaExpostaHIV = () => ( <TableDesfechos /> );
-
 
 export default DesfechoCriancaExpostaHIV;
 
