@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MRT_EditActionButtons, MaterialReactTable, type MRT_ColumnDef, type MRT_Row, type MRT_TableOptions, useMaterialReactTable } from 'material-react-table';
 import { useMediaQuery } from '@mui/material';   
-import { Box, Button, DialogActions, DialogContent, DialogTitle, IconButton, Tooltip } from '@mui/material';
+import { Box, Button, DialogActions, DialogContent, DialogTitle, IconButton, Tooltip, TextField, MenuItem } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import axiosInstance from '@/apis/axiosInstance';
 import dayjs from 'dayjs'; // Importa o dayjs
 
 import { MRT_Localization_PT_BR } from 'material-react-table/locales/pt-BR';
-import { idID } from '@mui/material/locale';
+
 
 
 //const columnHelper = createMRTColumnHelper<MonitoraCriancaExpostaHIV>();
@@ -25,7 +25,6 @@ const TableMonitoraCriancaExpostaHIV = () => {
   };  
 
   const [desfechoOptions, setDesfechoOptions] = useState<{ value: number; label: string }[]>([]);  
-
   useEffect(() => {
     const fetchStates = async () => {
       try {
@@ -43,9 +42,32 @@ const TableMonitoraCriancaExpostaHIV = () => {
 
     fetchStates();
   }, []);
-
   console.log(desfechoOptions);
 
+
+
+  const [searchResults, setSearchResults] = useState<any[]>([]); // Armazenar as unidades de monitoramento
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false); // Controlar se a busca está carregando
+  const [selectedUnidade, setSelectedUnidade] = useState<number | null>(null); // Controlar a unidade selecionada
+
+  // Função para buscar as unidades de monitoramento
+  const handleSearchUnidade = async (unidade: string) => {
+    setIsLoadingSearch(true);
+    try {
+      const response = await axiosInstance.get(`/unidadesaude/filter/${unidade}`);
+      setSearchResults(response.data); // Atualizar os resultados da busca
+    } catch (error) {
+      console.error('Erro ao buscar unidades:', error);
+    } finally {
+      setIsLoadingSearch(false);
+    }
+  };
+
+  const handleSelectUnidade = (idUnidade: number) => {
+    setSelectedUnidade(idUnidade); // Atualiza a unidade selecionada
+  };
+
+  
   const columns = useMemo<MRT_ColumnDef<MonitoraCriancaExpostaHIV>[]>(() => [
     {
       accessorKey: 'id',      
@@ -93,6 +115,53 @@ const TableMonitoraCriancaExpostaHIV = () => {
       },
     },
 
+    {
+      accessorKey: 'tb_unidade_monitoramento.no_unidade', 
+      header: 'Unidade de Monitoramento',
+      Cell: ({ cell, row, column, table }) => {
+        return (
+          <Box sx={{ display: 'flex', gap: '1rem' }}>
+            <TextField
+              value={selectedUnidade ? selectedUnidade : cell.getValue()} // Exibir a unidade selecionada ou original
+              onClick={() => handleSearchUnidade('Unidade de Monitoramento')}
+            />
+            <Button 
+              variant="outlined" 
+              onClick={() => handleSearchUnidade('Unidade de Monitoramento')}
+              disabled={isLoadingSearch}
+            >
+              Pesquisar
+            </Button>
+            {searchResults.length > 0 && (
+              <Box sx={{ maxHeight: '200px', overflowY: 'auto' }}>
+                {searchResults.map((unidade) => (
+                  <MenuItem
+                    key={unidade.id}
+                    onClick={() => handleSelectUnidade(unidade.id)}
+                  >
+                    {unidade.no_unidade}
+                  </MenuItem>
+                ))}
+              </Box>
+            )}
+          </Box>
+        );
+      },
+      muiEditTextFieldProps: {
+        error: !!validationErrors.tb_unidade_monitoramento,
+        helperText: validationErrors.tb_unidade_monitoramento,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, tb_unidade_monitoramento: undefined })), 
+      },
+    },
+    {
+      accessorKey: 'id_unidade_monitoramento',
+      header: 'id_unidade_monitoramento',
+      muiEditTextFieldProps: {
+        value: selectedUnidade, // Atribui o ID da unidade selecionada
+      },
+    },
+
+    /*
     { 
       accessorKey: 'tb_unidade_monitoramento.no_unidade',
       header: 'Unidade de Monitoramento',
@@ -112,6 +181,7 @@ const TableMonitoraCriancaExpostaHIV = () => {
         onFocus: () => setValidationErrors((prev) => ({ ...prev, id_unidade_monitoramento: undefined })),
       },
     },
+    */
     {
       accessorKey: 'id_desfecho_criexp_hiv',
       header: 'Desfecho',
@@ -143,7 +213,8 @@ const TableMonitoraCriancaExpostaHIV = () => {
         onFocus: () => setValidationErrors((prev) => ({ ...prev, no_coordenadoria: undefined })),
       },
     },
-  ], [validationErrors, desfechoOptions]);
+  ], [validationErrors, desfechoOptions, selectedUnidade, searchResults]);
+
 
   const { mutateAsync: createMonitoraCriancaExpostaHIV } = useCreateMonitoraCriancaExpostaHIV();
   const { data: fetchedMonitoraCriancaExpostaHIV = [], isLoading: isLoadingMonitoraCriancaExpostaHIV } = useGetMonitoraCriancaExpostaHIV();
@@ -252,6 +323,8 @@ const TableMonitoraCriancaExpostaHIV = () => {
   });
 
   return <MaterialReactTable table={table} />
+
+
 };
 
 function useCreateMonitoraCriancaExpostaHIV() {
