@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MRT_EditActionButtons, MaterialReactTable, type MRT_ColumnDef, type MRT_Row, type MRT_TableOptions, useMaterialReactTable } from 'material-react-table';
 import { useMediaQuery } from '@mui/material';   
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Tooltip, TextField } from '@mui/material';
+import { Box, Button, DialogActions, DialogContent, DialogTitle, IconButton, Tooltip, TextField, MenuItem } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,29 +10,15 @@ import axiosInstance from '@/apis/axiosInstance';
 import dayjs from 'dayjs'; // Importa o dayjs
 
 import { MRT_Localization_PT_BR } from 'material-react-table/locales/pt-BR';
-import { UnidadeSaude } from '@/models/types'; 
-import UnidadeSearch from '@/pages/UnidadeSaude/UnidadeSearch'; 
-
 
 
 
 //const columnHelper = createMRTColumnHelper<MonitoraCriancaExpostaHIV>();
 
 const TableMonitoraCriancaExpostaHIV = () => {
-
-
   const isMobile = useMediaQuery('(max-width: 1000px)');  
+
   const [validationErrors, setValidationErrors] = useState<Record<string, string | undefined>>({});
-
-  const [selectedMonitoraCE, setSelecteMonitoraCE] = useState<MonitoraCriancaExpostaHIV | null>(null);
-  const [openEditModal, setOpenEditModal] = useState(false); // Modal para edição
-  const [openInsertModal, setOpenInsertModal] = useState(false); // Modal para inserção
-  const [newMonitoraCE, setNewMonitoraCE] = useState<MonitoraCriancaExpostaHIV>({nu_notific_sinan: '', id_paciente: 0, dt_inicio_monitoramento: new Date() });
-
-  // Função chamada quando uma unidade é selecionada no componente UnidadeSearch
-  const [selectedUnidade, setSelectedUnidade] = useState<UnidadeSaude | null>(null);
-
-
 
   const formatDate = (date: Date) => {
     return dayjs(date).format('DD/MM/YYYY'); // Formata a data para 'dd/mm/yyyy'
@@ -60,6 +46,28 @@ const TableMonitoraCriancaExpostaHIV = () => {
 
 
 
+  const [searchResults, setSearchResults] = useState<any[]>([]); // Armazenar as unidades de monitoramento
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false); // Controlar se a busca está carregando
+  const [selectedUnidade, setSelectedUnidade] = useState<number | null>(null); // Controlar a unidade selecionada
+
+  // Função para buscar as unidades de monitoramento
+  const handleSearchUnidade = async (unidade: string) => {
+    setIsLoadingSearch(true);
+    try {
+      const response = await axiosInstance.get(`/unidadesaude/filter/${unidade}`);
+      setSearchResults(response.data); // Atualizar os resultados da busca
+    } catch (error) {
+      console.error('Erro ao buscar unidades:', error);
+    } finally {
+      setIsLoadingSearch(false);
+    }
+  };
+
+  const handleSelectUnidade = (idUnidade: number) => {
+    setSelectedUnidade(idUnidade); // Atualiza a unidade selecionada
+  };
+
+  
   const columns = useMemo<MRT_ColumnDef<MonitoraCriancaExpostaHIV>[]>(() => [
     {
       accessorKey: 'id',      
@@ -156,54 +164,13 @@ const TableMonitoraCriancaExpostaHIV = () => {
         onFocus: () => setValidationErrors((prev) => ({ ...prev, no_coordenadoria: undefined })),
       },
     },
-  ], [validationErrors, desfechoOptions]);
+  ], [validationErrors, desfechoOptions, selectedUnidade, searchResults]);
 
 
   const { mutateAsync: createMonitoraCriancaExpostaHIV } = useCreateMonitoraCriancaExpostaHIV();
   const { data: fetchedMonitoraCriancaExpostaHIV = [], isLoading: isLoadingMonitoraCriancaExpostaHIV } = useGetMonitoraCriancaExpostaHIV();
   const { mutateAsync: updateMonitoraCriancaExpostaHIV } = useUpdateMonitoraCriancaExpostaHIV();
   const { mutateAsync: deleteMonitoraCriancaExpostaHIV } = useDeleteMonitoraCriancaExpostaHIV();
-
-  const handleEditRowClick = (row: MonitoraCriancaExpostaHIV) => {
-    setSelecteMonitoraCE(row);
-    setSelectedUnidade(row.tb_unidade_monitoramento);
-    setOpenEditModal(true); // Abre a modal de edição
-  };
-
-
-  const handleSaveMonitoraCE = async () => {
-    if (selectedMonitoraCE) {
-      const newValidationErrors = validateMonitoraCriancaExpostaHIV(selectedMonitoraCE);
-      if (Object.values(newValidationErrors).some((error) => error)) {
-        setValidationErrors(newValidationErrors);
-        return;
-      }
-      setValidationErrors({});
-      selectedMonitoraCE.id_unidade_monitoramento = selectedUnidade?.id;
-      await updateMonitoraCriancaExpostaHIV(selectedMonitoraCE);
-      setOpenEditModal(false); // Fecha a modal após salvar
-      setSelecteMonitoraCE(null); // Limpa a seleção
-    }
-  };  
-
-  const handleInsertMonitoraCE = async () => {
-    const newValidationErrors = validateMonitoraCriancaExpostaHIV(newMonitoraCE);
-    if (Object.values(newValidationErrors).some((error) => error)) {
-      setValidationErrors(newValidationErrors);
-      return;
-    }
-    setValidationErrors({});
-    await createMonitoraCriancaExpostaHIV(newMonitoraCE);
-    setOpenInsertModal(false); // Fecha a modal após salvar
-    setNewMonitoraCE({ nu_notific_sinan: '', id_paciente: 0, dt_inicio_monitoramento: new Date() }); // Limpa os campos
-  };
-
-  // Função chamada quando uma unidade é selecionada no componente UnidadeSearch
-  const handleSelectUnidade = (unidade: UnidadeSaude) => {
-    setSelectedUnidade(unidade);
-  };
-
-
 
   const handleCreateMonitoraCriancaExpostaHIV: MRT_TableOptions<MonitoraCriancaExpostaHIV>['onCreatingRowSave'] = async ({ values, table }) => {
     const newValidationErrors = validateMonitoraCriancaExpostaHIV(values);
@@ -233,8 +200,6 @@ const TableMonitoraCriancaExpostaHIV = () => {
     }
   };
 
-
-  /*
   const table = useMaterialReactTable({
     columns,
     data: fetchedMonitoraCriancaExpostaHIV,
@@ -307,106 +272,8 @@ const TableMonitoraCriancaExpostaHIV = () => {
       isLoading: isLoadingMonitoraCriancaExpostaHIV,
     },
   });
-  */
 
-  //return <MaterialReactTable table={table} />
-
-
-
-  return (
-    <Box>
-      {/* Botão Inserir */}
-      <Button 
-        variant="contained" 
-        color="primary" 
-        onClick={() => setOpenInsertModal(true)} 
-        sx={{ marginBottom: '1rem' }}
-      >
-        Inserir
-      </Button>
-
-      {/* Tabela */}
-      <MaterialReactTable
-        columns={columns}
-        data={ fetchedMonitoraCriancaExpostaHIV }
-        initialState= { {columnVisibility: {'id_paciente': false }, // 'id_unidade_monitoramento': false, 'id': false
-          showColumnFilters: true, showGlobalFilter: true 
-        }}
-        localization={MRT_Localization_PT_BR}
-        enableEditing={true}
-        muiToolbarAlertBannerProps={isLoadingMonitoraCriancaExpostaHIV ? { color: 'error', children: 'Error loading data' } : undefined}
-        renderRowActions={({ row }) => (
-          <Box sx={{ display: 'flex', gap: '2rem' }}>
-            <Tooltip title="Edit">
-              <IconButton onClick={() => handleEditRowClick(row.original)}>
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete">
-              <IconButton color="error" onClick={() => openDeleteConfirmModal(row)}>
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        )}
-      />
-
-      {/* Modal de Edição */}
-      <Dialog open={openEditModal} onClose={() => setOpenEditModal(false)}>
-        <DialogTitle>Edit Criança Exposta</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <UnidadeSearch onSelectUnidade={handleSelectUnidade} />
-
-          <TextField
-            label="Unidade"
-            value={selectedUnidade?.no_unidade || ''}
-            onChange={(e) => setSelectedUnidade({ ...selectedUnidade!, no_unidade: e.target.value })}
-            error={!!validationErrors.no_unidade}
-            helperText={validationErrors.no_unidade}
-          />
-          <TextField
-            label="CNES"
-            value={selectedUnidade?.cnes_unidade || ''}
-            onChange={(e) => setSelectedUnidade({ ...selectedUnidade!, cnes_unidade: e.target.value })}
-            error={!!validationErrors.cnes_unidade}
-            helperText={validationErrors.cnes_unidade}
-          />
-
-
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEditModal(false)}>Cancelar</Button>
-          <Button onClick={handleSaveMonitoraCE}>Salvar</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Modal de Inserção */}
-      <Dialog open={openInsertModal} onClose={() => setOpenInsertModal(false)}>
-        <DialogTitle>Inserir Criança Exposta</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <TextField
-            label="Dt. Inicio"
-            value={newMonitoraCE.dt_inicio_monitoramento}
-            onChange={(e) => setNewMonitoraCE({ ...newMonitoraCE, dt_inicio_monitoramento: new Date() })}
-            error={!!validationErrors.dt_inicio_monitoramento}
-            helperText={validationErrors.dt_inicio_monitoramento}
-          />
-          <TextField
-            label="id_paciente"
-            value={newMonitoraCE.id_paciente}
-            onChange={(e) => setNewMonitoraCE({ ...newMonitoraCE, id_paciente: Number(e.target.value) })}
-            error={!!validationErrors.cnes_unidade}
-            helperText={validationErrors.cnes_unidade}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenInsertModal(false)}>Cancelar</Button>
-          <Button onClick={handleInsertMonitoraCE}>Salvar</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
-
+  return <MaterialReactTable table={table} />
 
 
 };
@@ -455,7 +322,6 @@ function useUpdateMonitoraCriancaExpostaHIV() {
       const response = await axiosInstance.patch(`/criancaexpostahiv/${monitoraCriancaExpostaHIV.id}`,
         {
           id_desfecho_criexp_hiv: monitoraCriancaExpostaHIV.id_desfecho_criexp_hiv,
-          id_unidade_monitoramento: monitoraCriancaExpostaHIV.id_unidade_monitoramento,
         }
       );
       return response.data;

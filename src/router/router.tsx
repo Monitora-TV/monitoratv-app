@@ -3,6 +3,7 @@ import Layout from '@/router/Layout';
 import Dashboard from '@/pages/Dashboard/Dashboard';
 import DesfechoCriancaExpostaHIV from '@/pages/Desfechocriancaexpostahiv/Desfechocriancaexpostahiv';
 import MonitoraCriancaExpostaHIV from '@/pages/MonitoraCriancaExpostaHiv/MonitoraCriancaExpostaHiv'; 
+import UnidadeSaudePage from "@/pages/UnidadeSaude/UnidadeSaude"; 
 import ExampleWithProviders from '@/pages/Users/gridUser';
 import ErrorPage from '@/router/ErrorPage';
 import { getOidc } from "../oidc";
@@ -33,8 +34,12 @@ export const router = createBrowserRouter([
                 path: "monitoracriancaexpostahiv",
                 Component: MonitoraCriancaExpostaHIV,
                 loader: protectedRouteLoader
+            },
+            {          
+                path: "unidadesaude",
+                Component: UnidadeSaudePage,
+                loader: protectedRouteLoader
             }
-
         ]
     }
 ]);
