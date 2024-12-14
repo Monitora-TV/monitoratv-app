@@ -4,6 +4,7 @@ import Dashboard from '@/pages/Dashboard/Dashboard';
 import DesfechoCriancaExpostaHIV from '@/pages/Desfechocriancaexpostahiv/Desfechocriancaexpostahiv';
 import MonitoraCriancaExpostaHIV from '@/pages/MonitoraCriancaExpostaHiv/MonitoraCriancaExpostaHiv'; 
 import UnidadeSaudePage from "@/pages/UnidadeSaude/UnidadeSaude"; 
+import ConfirmationDialog from "@/pages/UnidadeSaude/UnidadeSearchDialog"; 
 import ExampleWithProviders from '@/pages/Users/gridUser';
 import ErrorPage from '@/router/ErrorPage';
 import { getOidc } from "../oidc";
@@ -39,7 +40,13 @@ export const router = createBrowserRouter([
                 path: "unidadesaude",
                 Component: UnidadeSaudePage,
                 loader: protectedRouteLoader
+            },
+            {          
+                path: "demo",
+                Component: ConfirmationDialog,
+                loader: protectedRouteLoader
             }
+
         ]
     }
 ]);

@@ -1,19 +1,23 @@
 import * as React from 'react';
-import Paper from '@mui/material/Paper';
-import InputBase from '@mui/material/InputBase';
+import Box from '@mui/material/Box';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
+import InputLabel from '@mui/material/InputLabel';
+import OutlinedInput from '@mui/material/OutlinedInput';
 import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import { useState } from 'react';
-import { UnidadeSaude } from '@/models/types'; 
+import { UnidadeSaude } from '@/models/types';
 import axiosInstance from '@/apis/axiosInstance';
 
-// Agora, o componente recebe uma função `onSelectUnidade` como prop para passar a unidade selecionada
+// Componente para busca de unidades
 interface UnidadeSearchProps {
-  onSelectUnidade: (unidade: UnidadeSaude) => void; // Função para notificar a seleção
+  onSelectUnidade: (unidade: UnidadeSaude, inputType: string) => void; // Passa o inputType para identificar o campo correto
+  inputType: string; // Recebe o tipo de campo, para saber qual input está sendo editado
 }
 
-export default function UnidadeSearch({ onSelectUnidade }: UnidadeSearchProps) {
+const UnidadeSearch: React.FC<UnidadeSearchProps> = ({ onSelectUnidade, inputType }) => {
   const [searchString, setSearchString] = useState(''); // Estado para armazenar o valor da busca
   const [unidades, setUnidades] = useState<UnidadeSaude[]>([]); // Estado para armazenar as unidades de saúde retornadas
 
@@ -29,55 +33,61 @@ export default function UnidadeSearch({ onSelectUnidade }: UnidadeSearchProps) {
     }
   };
 
+  
+
   const handleSelectUnidade = (unidade: UnidadeSaude) => {
-    onSelectUnidade(unidade); // Passa a unidade selecionada para o componente pai
+    onSelectUnidade(unidade, inputType); // Passa a unidade e o inputType para o componente pai
     setUnidades([]); // Limpa a lista de unidades após a seleção
   };
 
   return (
-    <div>
-      <Paper
-        component="form"
-        sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400 }}
-        onSubmit={(e) => e.preventDefault()} // Previne o comportamento padrão do formulário
-      >
-        <IconButton sx={{ p: '10px' }} aria-label="menu">
-          <MenuIcon />
-        </IconButton>
-        <InputBase
-          sx={{ ml: 1, flex: 1 }}
-          placeholder="Search Unidade"
-          inputProps={{ 'aria-label': 'search unidade' }}
-          value={searchString}
-          onChange={(e) => setSearchString(e.target.value)} // Atualiza o estado quando o valor muda
-        />
-        <IconButton
-          type="button"
-          sx={{ p: '10px' }}
-          aria-label="search"
-          onClick={handleSearch} // Chama a função de busca ao clicar
-        >
-          <SearchIcon />
-        </IconButton>
-      </Paper>
+    <Box sx={{ '& .MuiDialog-paper': { bgcolor: 'background.paper' } }}>
+      <InputLabel htmlFor="search-input">Buscar Unidade</InputLabel>
+      <OutlinedInput
+        id="search-input"
+        value={searchString}
+        onChange={(e) => setSearchString(e.target.value)} // Atualiza o estado quando o valor muda
+        placeholder="Digite o nome da unidade"
+        endAdornment={
+          <IconButton
+            sx={{ p: '10px' }}
+            aria-label="search"
+            onClick={handleSearch} // Chama a função de busca ao clicar
+          >
+            <SearchIcon />
+          </IconButton>
+        }
+        sx={{
+          width: '100%', // Ajusta para ocupar 100% do espaço disponível
+          maxWidth: '600px', // Define um limite máximo de largura
+          height: '45px', // Aumenta a altura do input
+          borderRadius: '4px', // Adiciona bordas arredondadas para o estilo
+          padding: '0 10px', // Ajusta o padding interno
+        }}
+      />
 
       {/* Renderiza a lista de unidades de saúde */}
       {unidades.length > 0 && (
         <div style={{ marginTop: '20px' }}>
           <h3>Unidades Encontradas:</h3>
-          <ul>
+          <List>
             {unidades.map((unidade) => (
-              <li
+              <ListItemButton
                 key={unidade.id}
-                style={{ cursor: 'pointer', padding: '5px', border: '1px solid #ccc', marginBottom: '5px' }}
-                onClick={() => handleSelectUnidade(unidade)} // Passa a unidade selecionada para o pai e limpa a lista
+                selected={false}
+                onClick={() => handleSelectUnidade(unidade)} // Passa a unidade para a seleção
               >
-                <strong>{unidade.no_unidade}</strong> (ID: {unidade.id})
-              </li>
+                <ListItemText
+                  primary={unidade.no_unidade}
+                  secondary={`ID: ${unidade.id}`}
+                />
+              </ListItemButton>
             ))}
-          </ul>
+          </List>
         </div>
       )}
-    </div>
+    </Box>
   );
-}
+};
+
+export default UnidadeSearch;

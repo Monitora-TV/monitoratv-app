@@ -129,7 +129,6 @@ const TableUnidadeSaude = () => {
       <Dialog open={openEditModal} onClose={() => setOpenEditModal(false)}>
         <DialogTitle>Edit Unidade de Saúde</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <UnidadeSearch onSelectUnidade={handleSelectUnidade} />
 
           <TextField
             label="Unidade"

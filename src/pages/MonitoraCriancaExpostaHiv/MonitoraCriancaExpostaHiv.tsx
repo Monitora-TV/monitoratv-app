@@ -171,6 +171,53 @@ const TableMonitoraCriancaExpostaHIV = () => {
   };
 
 
+
+
+
+  const handleCreateMonitoraCriancaExpostaHIV: MRT_TableOptions<MonitoraCriancaExpostaHIV>['onCreatingRowSave'] = async ({ values, table }) => {
+    const newValidationErrors = validateMonitoraCriancaExpostaHIV(values);
+    if (Object.values(newValidationErrors).some((error) => error)) {
+      setValidationErrors(newValidationErrors);
+      return;
+    }
+    setValidationErrors({});
+    await createMonitoraCriancaExpostaHIV(values);
+    table.setCreatingRow(null);
+  };
+
+  // nova modal desacoplada
+  const handleInsertMonitoraCE = async () => {
+    const newValidationErrors = validateMonitoraCriancaExpostaHIV(newMonitoraCE);
+    if (Object.values(newValidationErrors).some((error) => error)) {
+      setValidationErrors(newValidationErrors);
+      return;
+    }
+    setValidationErrors({});
+    await createMonitoraCriancaExpostaHIV(newMonitoraCE);
+    setOpenInsertModal(false); // Fecha a modal após salvar
+    setNewMonitoraCE({ nu_notific_sinan: '', id_paciente: 0, dt_inicio_monitoramento: new Date() }); // Limpa os campos
+  };
+
+        /*  
+        onCreatingRowSave: handleCreateMonitoraCriancaExpostaHIV,
+        onEditingRowCancel: () => setValidationErrors({}),
+        onEditingRowSave: handleSaveMonitoraCriancaExpostaHIV,
+        */
+
+  //  modal tanstack
+  const handleSaveMonitoraCriancaExpostaHIV: MRT_TableOptions<MonitoraCriancaExpostaHIV>['onEditingRowSave'] = async ({ values, table }) => {
+    const newValidationErrors = validateMonitoraCriancaExpostaHIV(values);
+    if (Object.values(newValidationErrors).some((error) => error)) {
+      setValidationErrors(newValidationErrors);
+      return;
+    }
+    setValidationErrors({});
+    await updateMonitoraCriancaExpostaHIV(values);
+    table.setEditingRow(null);
+  };
+
+
+  // nova modal desacoplada
   const handleSaveMonitoraCE = async () => {
     if (selectedMonitoraCE) {
       const newValidationErrors = validateMonitoraCriancaExpostaHIV(selectedMonitoraCE);
@@ -186,46 +233,13 @@ const TableMonitoraCriancaExpostaHIV = () => {
     }
   };  
 
-  const handleInsertMonitoraCE = async () => {
-    const newValidationErrors = validateMonitoraCriancaExpostaHIV(newMonitoraCE);
-    if (Object.values(newValidationErrors).some((error) => error)) {
-      setValidationErrors(newValidationErrors);
-      return;
-    }
-    setValidationErrors({});
-    await createMonitoraCriancaExpostaHIV(newMonitoraCE);
-    setOpenInsertModal(false); // Fecha a modal após salvar
-    setNewMonitoraCE({ nu_notific_sinan: '', id_paciente: 0, dt_inicio_monitoramento: new Date() }); // Limpa os campos
-  };
-
+  // nova modal desacoplada
   // Função chamada quando uma unidade é selecionada no componente UnidadeSearch
   const handleSelectUnidade = (unidade: UnidadeSaude) => {
     setSelectedUnidade(unidade);
   };
 
 
-
-  const handleCreateMonitoraCriancaExpostaHIV: MRT_TableOptions<MonitoraCriancaExpostaHIV>['onCreatingRowSave'] = async ({ values, table }) => {
-    const newValidationErrors = validateMonitoraCriancaExpostaHIV(values);
-    if (Object.values(newValidationErrors).some((error) => error)) {
-      setValidationErrors(newValidationErrors);
-      return;
-    }
-    setValidationErrors({});
-    await createMonitoraCriancaExpostaHIV(values);
-    table.setCreatingRow(null);
-  };
-
-  const handleSaveMonitoraCriancaExpostaHIV: MRT_TableOptions<MonitoraCriancaExpostaHIV>['onEditingRowSave'] = async ({ values, table }) => {
-    const newValidationErrors = validateMonitoraCriancaExpostaHIV(values);
-    if (Object.values(newValidationErrors).some((error) => error)) {
-      setValidationErrors(newValidationErrors);
-      return;
-    }
-    setValidationErrors({});
-    await updateMonitoraCriancaExpostaHIV(values);
-    table.setEditingRow(null);
-  };
 
   const openDeleteConfirmModal = (row: MRT_Row<MonitoraCriancaExpostaHIV>) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
@@ -234,12 +248,11 @@ const TableMonitoraCriancaExpostaHIV = () => {
   };
 
 
-  /*
   const table = useMaterialReactTable({
     columns,
     data: fetchedMonitoraCriancaExpostaHIV,
     initialState: { 
-      columnVisibility: {'id_unidade_monitoramento': false, 'id_paciente': false, 'id': false},
+      //columnVisibility: {'id_unidade_monitoramento': false, 'id_paciente': false, 'id': false},
       showColumnFilters: true, showGlobalFilter: true 
     },
     localization: MRT_Localization_PT_BR,
@@ -266,6 +279,8 @@ const TableMonitoraCriancaExpostaHIV = () => {
       <>
         <DialogTitle variant="h3">Create New Monitora Crianca Exposta HIV</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} >
+          <UnidadeSearch onSelectUnidade={handleSelectUnidade} />
+
           {internalEditComponents}
         </DialogContent>
         <DialogActions>
@@ -277,6 +292,8 @@ const TableMonitoraCriancaExpostaHIV = () => {
       <>
         <DialogTitle variant="h3">Edita Monitora Crianca Exposta HIV</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <UnidadeSearch onSelectUnidade={handleSelectUnidade} />
+
           {internalEditComponents}
         </DialogContent>
         <DialogActions>
@@ -307,105 +324,9 @@ const TableMonitoraCriancaExpostaHIV = () => {
       isLoading: isLoadingMonitoraCriancaExpostaHIV,
     },
   });
-  */
 
-  //return <MaterialReactTable table={table} />
+  return <MaterialReactTable table={table} />
 
-
-
-  return (
-    <Box>
-      {/* Botão Inserir */}
-      <Button 
-        variant="contained" 
-        color="primary" 
-        onClick={() => setOpenInsertModal(true)} 
-        sx={{ marginBottom: '1rem' }}
-      >
-        Inserir
-      </Button>
-
-      {/* Tabela */}
-      <MaterialReactTable
-        columns={columns}
-        data={ fetchedMonitoraCriancaExpostaHIV }
-        initialState= { {columnVisibility: {'id_paciente': false }, // 'id_unidade_monitoramento': false, 'id': false
-          showColumnFilters: true, showGlobalFilter: true 
-        }}
-        localization={MRT_Localization_PT_BR}
-        enableEditing={true}
-        muiToolbarAlertBannerProps={isLoadingMonitoraCriancaExpostaHIV ? { color: 'error', children: 'Error loading data' } : undefined}
-        renderRowActions={({ row }) => (
-          <Box sx={{ display: 'flex', gap: '2rem' }}>
-            <Tooltip title="Edit">
-              <IconButton onClick={() => handleEditRowClick(row.original)}>
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete">
-              <IconButton color="error" onClick={() => openDeleteConfirmModal(row)}>
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        )}
-      />
-
-      {/* Modal de Edição */}
-      <Dialog open={openEditModal} onClose={() => setOpenEditModal(false)}>
-        <DialogTitle>Edit Criança Exposta</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <UnidadeSearch onSelectUnidade={handleSelectUnidade} />
-
-          <TextField
-            label="Unidade"
-            value={selectedUnidade?.no_unidade || ''}
-            onChange={(e) => setSelectedUnidade({ ...selectedUnidade!, no_unidade: e.target.value })}
-            error={!!validationErrors.no_unidade}
-            helperText={validationErrors.no_unidade}
-          />
-          <TextField
-            label="CNES"
-            value={selectedUnidade?.cnes_unidade || ''}
-            onChange={(e) => setSelectedUnidade({ ...selectedUnidade!, cnes_unidade: e.target.value })}
-            error={!!validationErrors.cnes_unidade}
-            helperText={validationErrors.cnes_unidade}
-          />
-
-
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEditModal(false)}>Cancelar</Button>
-          <Button onClick={handleSaveMonitoraCE}>Salvar</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Modal de Inserção */}
-      <Dialog open={openInsertModal} onClose={() => setOpenInsertModal(false)}>
-        <DialogTitle>Inserir Criança Exposta</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <TextField
-            label="Dt. Inicio"
-            value={newMonitoraCE.dt_inicio_monitoramento}
-            onChange={(e) => setNewMonitoraCE({ ...newMonitoraCE, dt_inicio_monitoramento: new Date() })}
-            error={!!validationErrors.dt_inicio_monitoramento}
-            helperText={validationErrors.dt_inicio_monitoramento}
-          />
-          <TextField
-            label="id_paciente"
-            value={newMonitoraCE.id_paciente}
-            onChange={(e) => setNewMonitoraCE({ ...newMonitoraCE, id_paciente: Number(e.target.value) })}
-            error={!!validationErrors.cnes_unidade}
-            helperText={validationErrors.cnes_unidade}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenInsertModal(false)}>Cancelar</Button>
-          <Button onClick={handleInsertMonitoraCE}>Salvar</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
 
 
 
