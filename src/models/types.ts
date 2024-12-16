@@ -18,6 +18,12 @@ export type Desfechocriancaexpostahiv = {
   no_desfecho_criancaexposta_hiv: string;
 };
 
+export type Coordenadoria  = {
+  id: number;
+  no_coordenadoria: string;
+};
+
+
 export type tb_usuario = {
   id: number;
   email: string;

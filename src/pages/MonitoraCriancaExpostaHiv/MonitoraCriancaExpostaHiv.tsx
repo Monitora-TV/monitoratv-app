@@ -6,7 +6,7 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconBut
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MonitoraCriancaExpostaHIV, Desfechocriancaexpostahiv } from '@/models/types'; // Atualize conforme o caminho do seu modelo
+import { MonitoraCriancaExpostaHIV, Desfechocriancaexpostahiv, Coordenadoria } from '@/models/types'; // Atualize conforme o caminho do seu modelo
 import axiosInstance from '@/apis/axiosInstance';
 import dayjs from 'dayjs'; // Importa o dayjs
 
@@ -14,6 +14,9 @@ import { MRT_Localization_PT_BR } from 'material-react-table/locales/pt-BR';
 import { UnidadeSaude } from '@/models/types'; 
 import UnidadeSearch from '@/pages/UnidadeSaude/UnidadeSearch'; 
 import SearchIcon from '@mui/icons-material/Search';
+
+import { MenuItem, Select, FormControl } from '@mui/material';
+
 
 
 const TableMonitoraCriancaExpostaHIV = () => {
@@ -28,6 +31,7 @@ const TableMonitoraCriancaExpostaHIV = () => {
  const [open, setOpen] = useState(false);
  const [selectedUnidade, setSelectedUnidade] = useState<UnidadeSaude | null>(null);
  const [inputType, setInputType] = useState<string>('no_unidade'); // Armazena o tipo de input (unidade ou maternidade)
+
 
  // Funções para controle de modal e seleção de unidade
  const handleClickListItem = (type: string) => {
@@ -93,6 +97,28 @@ const handleSaveMonitoraCE = async () => {
 
     fetchStates();
   }, []);
+
+
+  // Estado para o filtro da coordenadoria
+  const [coordenadoriaFilter, setCoordenadoriaFilter] = useState<string>('');
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const response = await axiosInstance.get("/coordenadoria");
+        const options = response.data.map((coordenadoriaFilter: Coordenadoria) => ({
+          value: coordenadoriaFilter.id,
+          label: coordenadoriaFilter.no_coordenadoria,
+        }));
+        setCoordenadoriaFilter(options);
+      } catch (error) {
+        console.error('Erro ao buscar os desfechos:', error);
+      }
+    };
+
+    fetchStates();
+  }, []);
+
+
 
   
   const columns = useMemo<MRT_ColumnDef<MonitoraCriancaExpostaHIV>[]>(() => [
@@ -180,15 +206,27 @@ const handleSaveMonitoraCE = async () => {
     {
       accessorKey: 'tb_unidade_monitoramento.tb_coordenadoria.no_coordenadoria',
       header: 'Coordenadoria',
-      filterVariant: 'multi-select',
+      // Defina o filtro customizado aqui
+      filterVariant: 'multi-select',  // ou 'multi-select' se for uma lista de opções
       enableFilterMatchHighlighting: false,
+      // Filtro customizado
       muiEditTextFieldProps: {
         error: !!validationErrors.no_coordenadoria,
         helperText: validationErrors.no_coordenadoria,
         onFocus: () => setValidationErrors((prev) => ({ ...prev, no_coordenadoria: undefined })),
       },
+      // Filtro do tipo texto
+      renderColumnFilter: () => (
+        <TextField
+          label="Filtrar Coordenadoria"
+          variant="outlined"
+          value={coordenadoriaFilter || ''}
+          onChange={(e) => setCoordenadoriaFilter(e.target.value)} // Atualiza o filtro
+          fullWidth
+        />
+      ),
     },
-  ], [validationErrors, desfechoOptions]);
+    ], [validationErrors, desfechoOptions, coordenadoriaFilter]);
 
   const { mutateAsync: createMonitoraCriancaExpostaHIV } = useCreateMonitoraCriancaExpostaHIV();
   const { data: fetchedMonitoraCriancaExpostaHIV = [], isLoading: isLoadingMonitoraCriancaExpostaHIV } = useGetMonitoraCriancaExpostaHIV();
@@ -256,9 +294,17 @@ const handleSaveMonitoraCE = async () => {
 
   const table = useMaterialReactTable({
     columns,
-    data: fetchedMonitoraCriancaExpostaHIV,
+    data: fetchedMonitoraCriancaExpostaHIV.filter(item => {
+      // Filtra os dados com base no filtro da coordenadoria
+      if (coordenadoriaFilter) {
+        return item.tb_unidade_monitoramento?.tb_coordenadoria?.no_coordenadoria
+          .toLowerCase()
+          .includes(coordenadoriaFilter.toLowerCase());
+      }
+      return true;
+    }),
     initialState: { 
-      columnVisibility: {'id_unidade_monitoramento': false, 'id_paciente': false, 'id': false},
+      columnVisibility: { 'id_unidade_monitoramento': false, 'id_paciente': false, 'id': false },
       showColumnFilters: true, showGlobalFilter: true 
     },
     localization: MRT_Localization_PT_BR,
