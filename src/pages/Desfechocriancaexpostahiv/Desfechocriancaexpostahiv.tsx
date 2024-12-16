@@ -8,7 +8,6 @@ import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient
 import { Desfechocriancaexpostahiv } from '@/models/types';
 import axiosInstance from '@/apis/axiosInstance';
 import { gerarNoFiltro } from '@/utils/utils';
-
 // import { fetch } from '../../apis/desfecho-crianca-api/axiosInstance';
 
 
@@ -138,6 +137,7 @@ const TableDesfechos = () => {
 
   return <MaterialReactTable table={table} />;
 };
+
 
 function useCreateDesfecho() {
   const queryClient = useQueryClient();

@@ -95,8 +95,8 @@ export type MonitoraCriancaExpostaHIV = {
 
 export type UnidadeSaude = {
   id?: number;
-  no_unidade: string;
-  cnes_unidade: string; // Não pode ser undefined, já que é obrigatório
+  no_unidade?: string;
+  cnes_unidade?: string; // Não pode ser undefined, já que é obrigatório
   id_maternidade?: number;
   no_maternidade?: string;
   id_coordenadoria?: number;
