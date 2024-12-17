@@ -1,9 +1,11 @@
+import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { MRT_EditActionButtons, MaterialReactTable, type MRT_ColumnDef, type MRT_Row, type MRT_TableOptions, useMaterialReactTable } from 'material-react-table';
 import { InputLabel, OutlinedInput, useMediaQuery } from '@mui/material';   
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Tooltip, TextField } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MonitoraCriancaExpostaHIV, Desfechocriancaexpostahiv, Coordenadoria } from '@/models/types'; // Atualize conforme o caminho do seu modelo
 import axiosInstance from '@/apis/axiosInstance';
 import dayjs from 'dayjs'; // Importa o dayjs
@@ -79,7 +81,8 @@ const handleSaveMonitoraCE = async () => {
     return dayjs(date).format('DD/MM/YYYY'); // Formata a data para 'dd/mm/yyyy'
   };
 
-  
+  const [filters, setFilters] = useState<{ [key: string]: string | number }>({});  // Estado para os filtros
+
   const [desfechoOptions, setDesfechoOptions] = useState<{ value: number; label: string }[]>([]);  
   useEffect(() => {
     const fetchStates = async () => {
@@ -119,7 +122,16 @@ const handleSaveMonitoraCE = async () => {
   }, []);
 
 
-    
+  // Função para alterar o filtro de desfecho, coodenadoria 
+  const handleChangeFilter = (filterKey: string, value: string | number) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [filterKey]: value,
+    }));
+  };
+
+
+  
   const columns = useMemo<MRT_ColumnDef<MonitoraCriancaExpostaHIV>[]>(() => [
     {
       accessorKey: 'id',      
@@ -166,47 +178,27 @@ const handleSaveMonitoraCE = async () => {
       },
     },
     {
-      accessorFn: (row) => row.tb_unidade_monitoramento?.no_unidade,
-      header: 'Unidade Monit.',
-      id: 'no_unidade',
-    },
-    {
       accessorKey: 'id_unidade_monitoramento',
-      header: 'Unidade teste',
-      // Exibe id_unidade_monitoramento junto com no_unidade na tabela
+      id: 'id_unidade_monitoramento',
+      header: 'id_unidade_monitoramento',
       accessorFn: (row) => row.tb_unidade_monitoramento,
-      Edit: ({ cell, column, row, table }) => {
-        const unidade = row.original.tb_unidade_monitoramento?.no_unidade;
-        return (
-          <div>
-     <InputLabel htmlFor="no_unidade">Unidade Monit.</InputLabel>            
-        <OutlinedInput
-          id="no_unidade"
-          value={selectedUnidade ? selectedUnidade.no_unidade : unidade}
-          disabled
-          label="Nome"
-          endAdornment={
-            <IconButton
-              sx={{ p: '10px' }}
-              aria-label="search"
-              onClick={() => handleClickListItem('no_unidade')} // Passa 'no_unidade' para identificar o campo de unidade
-            >
-              <SearchIcon />
-            </IconButton>
-          }
-          sx={{
-            width: '100%', // Ajusta para ocupar 100% do espaço disponível
-            maxWidth: '600px', // Define um limite máximo de largura
-            height: '45px', // Aumenta a altura do input
-            borderRadius: '4px', // Adiciona bordas arredondadas para o estilo
-            padding: '0 10px', // Ajusta o padding interno
-          }}        
-        />
-          </div>
-        );
+      Cell: () => null,  // Remover o botão da tabela
+      muiEditTextFieldProps: {
+        error: !!validationErrors.id_unidade_monitoramento,
+        helperText: validationErrors.id_unidade_monitoramento,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, id_unidade_monitoramento: undefined })),
       },
     },
-        {
+    { 
+      accessorKey: 'tb_unidade_monitoramento.no_unidade',
+      header: 'Unidade Monit.',
+      muiEditTextFieldProps: {
+        error: !!validationErrors.tb_unidade_monitoramento,
+        helperText: validationErrors.tb_unidade_monitoramento,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, tb_unidade_monitoramento: undefined })),
+      },
+    },
+    {
       accessorKey: 'id_desfecho_criexp_hiv',
       header: 'Desfecho',
       filterVariant:'select',
@@ -368,7 +360,7 @@ const handleSaveMonitoraCE = async () => {
     ),
       renderEditRowDialogContent: ({ table, row, internalEditComponents }) => (
       <>
-        <DialogTitle variant="h3">Edita Monitoramento Crianca Exposta HIV</DialogTitle>
+        <DialogTitle variant="h3">Edita Monitora Crianca Exposta HIV</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* Dialog para seleção de Unidade */}
         <Dialog open={open} onClose={handleClose}>
@@ -380,6 +372,32 @@ const handleSaveMonitoraCE = async () => {
               <Button onClick={handleClose} color="primary">Fechar</Button>
             </DialogActions>
           </Dialog>
+        {/* Renderização do formulário de criação e edição */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <InputLabel htmlFor="no_unidade">Unidade Monitoramento</InputLabel>
+          <OutlinedInput
+            id="no_unidade"
+            value={selectedUnidade ? selectedUnidade.no_unidade : ''} // Exibe a unidade selecionada
+            disabled
+            label="Unidade"
+            endAdornment={
+              <IconButton
+                sx={{ p: '10px' }}
+                aria-label="search"
+                onClick={() => handleClickListItem('no_unidade')} // Chama a pesquisa de unidades
+              >
+                <SearchIcon />
+              </IconButton>
+            }
+            sx={{
+              width: '100%',
+              maxWidth: '600px',
+              height: '45px',
+              borderRadius: '4px',
+              padding: '0 10px',
+            }}        
+          />
+        </Box>
           { internalEditComponents }
         </DialogContent>
         <DialogActions>
@@ -441,6 +459,80 @@ const handleSaveMonitoraCE = async () => {
 };
 
 
+
+/*
+function useCreateMonitoraCriancaExpostaHIV() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (monitoraCriancaExpostaHIV: MonitoraCriancaExpostaHIV) => {
+      const response = await axiosInstance.post("/monitoraCriancaExpostaHIV", monitoraCriancaExpostaHIV);
+      return response.data;
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['monitoraCriancaExpostaHIV'] }),
+  });
+}
+
+
+
+export function useGetMonitoraCriancaExpostaHIV() {
+  return useQuery<MonitoraCriancaExpostaHIV[]>({
+    queryKey: ['monitoracriancaexpostahiv'],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/criancaexpostahiv");
+      
+      // Tratando valores nulos na resposta da API
+      const data = response.data.map((item: { tb_desfecho_criancaexposta_hiv: any; tb_maternidade: any; tb_unidade_monitoramento: any; tb_paciente: any; }) => ({
+        ...item,
+        // Garantindo que valores nulos ou undefined sejam tratados
+        tb_desfecho_criancaexposta_hiv: item.tb_desfecho_criancaexposta_hiv ?? [],  // Se for null ou undefined, será um array vazio
+        tb_maternidade: item.tb_maternidade ?? {},  // Se for null ou undefined, será um objeto vazio
+        tb_unidade_monitoramento: item.tb_unidade_monitoramento ?? {},  // Se for null ou undefined, será um objeto vazio
+        tb_paciente: item.tb_paciente ?? {},  // Se for null ou undefined, será um objeto vazio
+      }));
+
+      return data; // Retornando os dados já tratados
+    },
+    refetchOnWindowFocus: false,
+  });
+}
+
+function useUpdateMonitoraCriancaExpostaHIV() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (monitoraCriancaExpostaHIV: MonitoraCriancaExpostaHIV) => {
+      const response = await axiosInstance.patch(`/criancaexpostahiv/${monitoraCriancaExpostaHIV.id}`,
+        {
+          id_desfecho_criexp_hiv: Number(monitoraCriancaExpostaHIV.id_desfecho_criexp_hiv),
+          id_unidade_monitoramento: Number(monitoraCriancaExpostaHIV.id_unidade_monitoramento),
+        }
+      );
+      return response.data;
+    },
+    onMutate: (newUserInfo: MonitoraCriancaExpostaHIV) => {
+      queryClient.setQueryData(['monitoraCriancaExpostaHIV'], (prevUsers: MonitoraCriancaExpostaHIV[]) =>
+        prevUsers?.map((prevUser) =>
+          prevUser.id === newUserInfo.id ? newUserInfo : prevUser,
+        ),
+      );
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['monitoraCriancaExpostaHIV'] }),
+  });
+}
+
+function useDeleteMonitoraCriancaExpostaHIV() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (monitoraCriancaExpostaHIVId: number) => {
+      await axiosInstance.delete(`/criancaexpostahiv/${monitoraCriancaExpostaHIVId}`);
+      return monitoraCriancaExpostaHIVId;
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['monitoraCriancaExpostaHIV'] }),
+  });
+}
+*/
 
 const MonitoraCriancaExpostaHIVPage = () => ( <TableMonitoraCriancaExpostaHIV /> );
 export default MonitoraCriancaExpostaHIVPage;

@@ -11,7 +11,7 @@ import SessionsChart from '@components/SessionsChart';
 import StatCard, { StatCardProps } from '@components/StatCard';
 import { useOidc } from "../../oidc";
 
-import SelectDesfechoCriancaExpostaHIV from '@/components/criancaexposta/SelectDesfechoCriancaExpostaHIV'; // Importe o seu componente Select
+
 
 
 const data: StatCardProps[] = [
@@ -58,7 +58,6 @@ export default function Dashboard() {
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Visão Geral
       </Typography>
-      {/* <SelectDesfechoCriancaExpostaHIV /> */}
       <Grid
         container
         spacing={2}

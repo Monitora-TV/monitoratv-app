@@ -79,12 +79,15 @@ export type MonitoraCriancaExpostaHIV = {
   tb_unidade_monitoramento?: {
     cnes_unidade: string;
     no_unidade: string;
+    id_coordenadoria: number;
     tb_coordenadoria?: {
       no_coordenadoria: string;
     };
+    id_supervisao: number;
     tb_supervisao_unidade_saude?: {
       no_supervisao: string;
     };
+    id_uvis: number;
     tb_uvis?: {
       no_uvis: string;
     };
