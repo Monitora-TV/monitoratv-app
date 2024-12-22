@@ -14,8 +14,11 @@ import UnidadeSearch from './UnidadeSearch'; // Importa o componente de busca
 
 export default function ConfirmationDialog() {
   const [open, setOpen] = React.useState(false);
-  const [selectedUnidade, setSelectedUnidade] = React.useState<UnidadeSaude | null>(null);
   const [inputType, setInputType] = React.useState<string>('no_unidade'); // Armazena o tipo de input (unidade ou maternidade)
+
+  const [selectedUnidade, setSelectedUnidade] = React.useState<UnidadeSaude | null>(null);
+  const [selectedMaternidade, setSelectedMaternidade] = React.useState<UnidadeSaude | null>(null);
+
 
   const handleClickListItem = (type: string) => {
     setInputType(type); // Define o tipo do campo (unidade ou maternidade)
@@ -27,25 +30,29 @@ export default function ConfirmationDialog() {
   };
 
   const handleSelectUnidade = (unidade: UnidadeSaude, type: string) => {
-    setSelectedUnidade((prev) => {
-      if (type === 'no_unidade') {
+
+    if (type === 'no_unidade') {
+      setSelectedUnidade((prev) => {
         return {
           ...prev,
           id: unidade.id,
           no_unidade: unidade.no_unidade,
           cnes_unidade: unidade.cnes_unidade, // Garantir que este campo seja atribuído corretamente
         };
+      })
       } else if (type === 'no_maternidade') {
+        setSelectedMaternidade((prev) => {
         return {
           ...prev,
-          id_maternidade: unidade.id,
-          no_maternidade: unidade.no_unidade, // No caso da maternidade, você pode atualizar o nome de unidade aqui
+          id: unidade.id,
+          no_unidade: unidade.no_unidade, // No caso da maternidade, você pode atualizar o nome de unidade aqui
+          cnes_unidade: unidade.cnes_unidade,
         };
-      }
-      return prev; // Retorna o estado anterior se nenhum tipo correspondente
-    });
+      })};
+
     setOpen(false); // Fecha a modal
   };
+  
   
   return (
     <Box sx={{ width: '100%', maxWidth: 500, bgcolor: 'background.paper', display: 'flex', flexWrap: 'wrap', gap: 2 }}>
@@ -106,7 +113,7 @@ export default function ConfirmationDialog() {
         <InputLabel htmlFor="id_maternidade">ID Maternidade</InputLabel>
         <OutlinedInput
           id="id_maternidade"
-          value={selectedUnidade ? selectedUnidade.id_maternidade : ''}
+          value={selectedMaternidade ? selectedMaternidade.id : ''}
           disabled
           label="ID Maternidade"
           fullWidth
@@ -118,7 +125,7 @@ export default function ConfirmationDialog() {
         <InputLabel htmlFor="no_maternidade">Nome Maternidade</InputLabel>
         <OutlinedInput
           id="no_maternidade"
-          value={selectedUnidade ? selectedUnidade.no_maternidade : ''}
+          value={selectedMaternidade ? selectedMaternidade.no_unidade : ''}
           disabled
           label="Maternidade"
           endAdornment={

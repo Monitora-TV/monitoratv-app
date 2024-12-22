@@ -28,7 +28,7 @@ const Toolbar = styled(MuiToolbar)({
   },
 });
 
-export default function AppNavbar() {
+export default function SideNav() {
   const [open, setOpen] = React.useState(false);
 
   const toggleDrawer = (newOpen: boolean) => () => {
@@ -39,7 +39,7 @@ export default function AppNavbar() {
     <AppBar
       position="fixed"
       sx={{
-        display: { xs: 'auto', md: 'none' },
+        display: 'flex',
         boxShadow: 0,
         bgcolor: 'background.paper',
         backgroundImage: 'none',

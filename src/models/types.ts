@@ -106,8 +106,6 @@ export type UnidadeSaude = {
   id?: number;
   no_unidade?: string;
   cnes_unidade?: string; // Não pode ser undefined, já que é obrigatório
-  id_maternidade?: number;
-  no_maternidade?: string;
   id_coordenadoria?: number;
   id_supervisao?: number;
   id_uvis?: number;
@@ -126,5 +124,7 @@ export type UnidadeSaude = {
     no_uvis: string;
   };
 }
+
+
 
 

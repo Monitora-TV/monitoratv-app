@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { MRT_EditActionButtons, MaterialReactTable, type MRT_ColumnDef, type MRT_Row, type MRT_TableOptions, useMaterialReactTable } from 'material-react-table';
 import { InputLabel, OutlinedInput, useMediaQuery } from '@mui/material';   
@@ -7,8 +8,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { MonitoraCriancaExpostaHIV, Desfechocriancaexpostahiv, Coordenadoria } from '@/models/types'; // Atualize conforme o caminho do seu modelo
 import axiosInstance from '@/apis/axiosInstance';
 import dayjs from 'dayjs'; // Importa o dayjs
-
 import { MRT_Localization_PT_BR } from 'material-react-table/locales/pt-BR';
+
 import { UnidadeSaude } from '@/models/types'; 
 import UnidadeSearch from '@/pages/UnidadeSaude/UnidadeSearch'; 
 import SearchIcon from '@mui/icons-material/Search';
@@ -27,13 +28,13 @@ const TableMonitoraCriancaExpostaHIV = () => {
 
 
 
-  // Estados para a pesquisa da unidade
-  const [open, setOpen] = useState(false);
-  const [selectedUnidade, setSelectedUnidade] = useState<UnidadeSaude | null>(null);
-  const [inputType, setInputType] = useState<string>('no_unidade'); // Armazena o tipo de input (unidade ou maternidade)
+  const [open, setOpen] = React.useState(false);
+  const [inputType, setInputType] = React.useState<string>('no_unidade'); // Armazena o tipo de input (unidade ou maternidade)
+
+  const [selectedUnidade, setSelectedUnidade] = React.useState<UnidadeSaude | null>(null);
+  const [selectedMaternidade, setSelectedMaternidade] = React.useState<UnidadeSaude | null>(null);
 
 
-  // Funções para controle de modal e seleção de unidade
   const handleClickListItem = (type: string) => {
     setInputType(type); // Define o tipo do campo (unidade ou maternidade)
     setOpen(true); // Abre a modal
@@ -44,36 +45,52 @@ const TableMonitoraCriancaExpostaHIV = () => {
   };
 
 
- const handleSelectUnidade = (unidade: UnidadeSaude, type: string) => {
-  setSelectedUnidade((prev) => {
+  //setSelectedUnidade
+
+  const handleSelectUnidade = (unidade: UnidadeSaude, type: string) => {
+
     if (type === 'no_unidade') {
-      return {
-        ...prev,
-        id: unidade.id,
-        no_unidade: unidade.no_unidade,
-        cnes_unidade: unidade.cnes_unidade, // Garantir que este campo seja atribuído corretamente
-      };
-    }
-    return prev; // Retorna o estado anterior se nenhum tipo correspondente
-  });
-  setOpen(false); // Fecha a modal após selecionar a unidade
-};
+      setSelectedUnidade((prev) => {
+        return {
+          ...prev,
+          id: unidade.id,
+          no_unidade: unidade.no_unidade,
+          cnes_unidade: unidade.cnes_unidade, // Garantir que este campo seja atribuído corretamente
+        };
+      })
+      } else if (type === 'no_maternidade') {
+        setSelectedMaternidade((prev) => {
+        return {
+          ...prev,
+          id: unidade.id,
+          no_unidade: unidade.no_unidade, // No caso da maternidade, você pode atualizar o nome de unidade aqui
+          cnes_unidade: unidade.cnes_unidade,
+        };
+      })};
+
+    setOpen(false); // Fecha a modal
+  };
 
 
-const handleSaveMonitoraCE = async () => {
-  if (selectedMonitoraCE) {
-    const newValidationErrors = validateMonitoraCriancaExpostaHIV(selectedMonitoraCE);
-    if (Object.values(newValidationErrors).some((error) => error)) {
-      setValidationErrors(newValidationErrors);
-      return;
+  const handleSaveMonitoraCE = async (original: MonitoraCriancaExpostaHIV) => {
+    if (selectedMonitoraCE) {
+      const newValidationErrors = validateMonitoraCriancaExpostaHIV(selectedMonitoraCE);
+      if (Object.values(newValidationErrors).some((error) => error)) {
+        setValidationErrors(newValidationErrors);
+        return;
+      }
+      setValidationErrors({});
+      
+      // Verifique se a unidade foi selecionada e adicione o id_unidade_monitoramento
+      if (selectedUnidade) {
+        selectedMonitoraCE.id_unidade_monitoramento = selectedUnidade.id;  // Atualiza a unidade no objeto
+      }
+
+      await updateMonitoraCriancaExpostaHIV(selectedMonitoraCE); // Função de atualização do registro
+      setOpenEditModal(false); // Fecha o modal após salvar
+      setSelecteMonitoraCE(null); // Limpa a seleção
     }
-    setValidationErrors({});
-    selectedMonitoraCE.id_unidade_monitoramento = selectedUnidade?.id; // Atualiza a unidade selecionada
-    await updateMonitoraCriancaExpostaHIV(selectedMonitoraCE);
-    setOpenEditModal(false);
-    setSelecteMonitoraCE(null);
-  }
-};
+  };
 
   const formatDate = (date: Date) => {
     return dayjs(date).format('DD/MM/YYYY'); // Formata a data para 'dd/mm/yyyy'
@@ -157,56 +174,82 @@ const handleSaveMonitoraCE = async () => {
       },
     },
     {
-      accessorKey: 'tb_paciente.no_paciente', 
-      header: 'Nome',
+      accessorKey: 'tb_paciente.no_paciente',
+      header: 'Name',
+      muiEditTextFieldProps: ({ cell }) => ({
+        onBlur: (event) => {
+          console.info(event);
+        },
+      }),
+    },    
+    {
+      accessorKey: 'id_unidade_monitoramento', 
+      header: 'id_unidade_monitoramento',
       muiEditTextFieldProps: {
-        error: !!validationErrors.tb_paciente,
-        helperText: validationErrors.tb_paciente,
-        onFocus: () => setValidationErrors((prev) => ({ ...prev, tb_paciente: undefined })),
+        error: !!validationErrors.id_unidade_monitoramento,
+        helperText: validationErrors.id_unidade_monitoramento,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, id_unidade_monitoramento: undefined })),
       },
     },
     {
-      accessorFn: (row) => row.tb_unidade_monitoramento?.no_unidade,
-      header: 'Unidade Monit.',
-      id: 'no_unidade',
-    },
-    {
-      accessorKey: 'id_unidade_monitoramento',
-      header: 'Unidade teste',
-      // Exibe id_unidade_monitoramento junto com no_unidade na tabela
-      accessorFn: (row) => row.tb_unidade_monitoramento,
+      //accessorKey: 'tb_unidade_monitoramento.no_unidade',
+      header: 'Unidade Monitoramento',
+      id: 'unidade_monitoramento',
+      accessorFn: (row) => `${row.id_unidade_monitoramento} ${row.tb_unidade_monitoramento?.no_unidade}`,
+      muiEditTextFieldProps: {
+        error: !!validationErrors.id_unidade_monitoramento,
+        helperText: validationErrors.id_unidade_monitoramento,
+        onFocus: () => setValidationErrors((prev) => ({ ...prev, id_unidade_monitoramento: undefined, no_unidade: undefined })),
+      },
       Edit: ({ cell, column, row, table }) => {
-        const unidade = row.original.tb_unidade_monitoramento?.no_unidade;
+        
+        
+        const unidade = selectedUnidade ? selectedUnidade.no_unidade : row.original.tb_unidade_monitoramento?.no_unidade;
+        const id_unidade = selectedUnidade ? selectedUnidade.id : row.original.id_unidade_monitoramento;
+        
+      
         return (
           <div>
-     <InputLabel htmlFor="no_unidade">Unidade Monit.</InputLabel>            
-        <OutlinedInput
-          id="no_unidade"
-          value={selectedUnidade ? selectedUnidade.no_unidade : unidade}
-          disabled
-          label="Nome"
-          endAdornment={
-            <IconButton
-              sx={{ p: '10px' }}
-              aria-label="search"
-              onClick={() => handleClickListItem('no_unidade')} // Passa 'no_unidade' para identificar o campo de unidade
-            >
-              <SearchIcon />
-            </IconButton>
-          }
-          sx={{
-            width: '100%', // Ajusta para ocupar 100% do espaço disponível
-            maxWidth: '600px', // Define um limite máximo de largura
-            height: '45px', // Aumenta a altura do input
-            borderRadius: '4px', // Adiciona bordas arredondadas para o estilo
-            padding: '0 10px', // Ajusta o padding interno
-          }}        
-        />
+            {/* Campo ID - Unidade (oculto) */}
+            <Box sx={{ display: 'none', flexDirection: 'column', width: '20%' }}>
+              <InputLabel htmlFor="id_unidade">ID</InputLabel>
+              <OutlinedInput
+                id="id_unidade"
+                value={selectedUnidade ? selectedUnidade.id : id_unidade}
+                disabled
+                label="ID"
+                fullWidth
+              />
+            </Box>
+
+            <InputLabel htmlFor="no_unidade">Unidade Monit.</InputLabel>
+            <OutlinedInput
+              id="no_unidade"
+              value={unidade} // Aqui, o valor depende de selectedUnidade
+              disabled // Você pode alterar para habilitado se permitir edição
+              label="Nome"
+              endAdornment={
+                <IconButton
+                  sx={{ p: '10px' }}
+                  aria-label="search"
+                  onClick={() => handleClickListItem('no_unidade')}
+                >
+                  <SearchIcon />
+                </IconButton>
+              }
+              sx={{
+                width: '100%',
+                maxWidth: '600px',
+                height: '45px',
+                borderRadius: '4px',
+                padding: '0 10px',
+              }}        
+            />
           </div>
         );
       },
     },
-        {
+    {
       accessorKey: 'id_desfecho_criexp_hiv',
       header: 'Desfecho',
       filterVariant:'select',
@@ -333,32 +376,18 @@ const handleSaveMonitoraCE = async () => {
       <>
         <DialogTitle variant="h3">Create New Monitora Crianca Exposta HIV</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Adicionando o campo de Unidade Monitoramento com o botão de pesquisa */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <InputLabel htmlFor="no_unidade">Unidade Monitoramento</InputLabel>
-            <OutlinedInput
-              id="no_unidade"
-              value={selectedUnidade ? selectedUnidade.no_unidade : ''}
-              disabled
-              label="Unidade"
-              endAdornment={
-                <IconButton
-                  sx={{ p: '10px' }}
-                  aria-label="search"
-                  onClick={() => handleClickListItem('no_unidade')} // Abre a pesquisa para 'no_unidade'
-                >
-                  <SearchIcon />
-                </IconButton>
-              }
-              sx={{
-                width: '100%', 
-                maxWidth: '600px', 
-                height: '45px', 
-                borderRadius: '4px', 
-                padding: '0 10px', 
-              }}        
-            />
-          </Box>
+        {/* Modal de busca */}
+        <Dialog open={open} onClose={handleClose}>
+          <DialogTitle>Selecione uma Unidade de Saúde</DialogTitle>
+          <DialogContent>
+            <UnidadeSearch onSelectUnidade={handleSelectUnidade} inputType={inputType} /> {/* Passa o tipo de input */}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} color="primary">
+              Fechar
+            </Button>
+          </DialogActions>
+        </Dialog>
           {internalEditComponents}
         </DialogContent>
         <DialogActions>
@@ -366,24 +395,32 @@ const handleSaveMonitoraCE = async () => {
         </DialogActions>
       </>
     ),
-      renderEditRowDialogContent: ({ table, row, internalEditComponents }) => (
+    renderEditRowDialogContent: ({ table, row, internalEditComponents }) => (
       <>
         <DialogTitle variant="h3">Edita Monitoramento Crianca Exposta HIV</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {/* Dialog para seleção de Unidade */}
+        {/* Modal de busca */}
         <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>Selecione uma Unidade de Monitoramento</DialogTitle>
-            <DialogContent>
-              <UnidadeSearch onSelectUnidade={handleSelectUnidade} inputType={inputType} />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose} color="primary">Fechar</Button>
-            </DialogActions>
-          </Dialog>
-          { internalEditComponents }
+          <DialogTitle>Selecione uma Unidade de Saúde</DialogTitle>
+          <DialogContent>
+            <UnidadeSearch onSelectUnidade={handleSelectUnidade} inputType={inputType} /> {/* Passa o tipo de input */}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} color="primary">
+              Fechar
+            </Button>
+          </DialogActions>
+        </Dialog>
+          {internalEditComponents}
         </DialogContent>
         <DialogActions>
-          <MRT_EditActionButtons variant="text" table={table} row={row} />
+          <Button
+            onClick={() => handleSaveMonitoraCE(row.original)}  // Chamando handleSaveMonitoraCE diretamente
+            color="primary"
+            variant="contained"
+          >
+            Salvar
+          </Button>
         </DialogActions>
       </>
     ),
@@ -413,31 +450,6 @@ const handleSaveMonitoraCE = async () => {
 
   return <MaterialReactTable table={table} />
 
-  /*
-  return (
-    <div>
-      <DialogContent>
-        <Box>
-          <InputLabel htmlFor="desfecho">Desfecho</InputLabel>
-          <Select
-            id="desfecho"
-            value={filters['id_desfecho_criexp_hiv'] || ''}
-            onChange={(e) => handleChangeFilter('id_desfecho_criexp_hiv', e.target.value)}
-          >
-            <MenuItem value="">Nenhum</MenuItem>
-            {desfechoOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </Box>
-      </DialogContent>
-
-      <MaterialReactTable table={table} />
-    </div>
-  );
-  */
 };
 
 

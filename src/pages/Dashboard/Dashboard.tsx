@@ -3,7 +3,6 @@ import Grid from '@mui/material/Grid2';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-//import Example from '@features/user/gridExample';
 import MonitoraCriancaExpostaHIVPage from '../MonitoraCriancaExpostaHiv/MonitoraCriancaExpostaHiv';
 import HighlightedCard from '@components/HighlightedCard';
 import PageViewsBarChart from '@components/PageViewsBarChart';
@@ -53,7 +52,8 @@ export default function Dashboard() {
 
 
   return (
-    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+    <div style={{marginLeft:'300px'}}>
+    <Box  sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
       {/* cards */}
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Visão Geral
@@ -88,5 +88,6 @@ export default function Dashboard() {
         </Grid>
       </Grid>
     </Box>
+    </div>
   );
 }
