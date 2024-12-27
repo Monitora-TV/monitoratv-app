@@ -14,11 +14,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import MailIcon from '@mui/icons-material/Mail';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import MoreIcon from '@mui/icons-material/MoreVert';
-import { OptionsMenu } from '../router/OptionsMenu';
-import Avatar from '@mui/material/Avatar';
 import { useOidc } from "../oidc";
 import { Link, useLocation } from "react-router-dom";
+import Divider from '@mui/material/Divider';
 
 
 const Search = styled('div')(({ theme }) => ({
@@ -51,7 +49,6 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: 'inherit',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
     width: '100%',
@@ -66,9 +63,10 @@ export default function Header() {
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =
     React.useState<null | HTMLElement>(null);
 
-  const { isUserLoggedIn, login, logout, oidcTokens } = useOidc();
-  const { pathname } = useLocation();
+  const { isUserLoggedIn, oidcTokens, goToAuthServer, backFromAuthServer, logout, login } = useOidc({ assertUserLoggedIn: true });
 
+  //const { isUserLoggedIn, login, logout, oidcTokens } = useOidc();
+  const { pathname } = useLocation();
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -90,6 +88,9 @@ export default function Header() {
     setMobileMoreAnchorEl(event.currentTarget);
   };
 
+
+
+
   const menuId = 'primary-search-account-menu';
   const renderMenu = (
     <Menu
@@ -107,8 +108,12 @@ export default function Header() {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+        <MenuItem onClick={() => goToAuthServer({extraQueryParams: { kc_action: "UPDATE_PROFILE" }})}>Minha Conta</MenuItem>
+        <Divider />
+        <MenuItem onClick={() => goToAuthServer({extraQueryParams: { kc_action: "UPDATE_PASSWORD" }})}>Alterar Senha</MenuItem>
+        <Divider />
+        <MenuItem onClick={() => logout({ redirectTo: "home" })}>Logout</MenuItem>
+
     </Menu>
   );
 
@@ -194,20 +199,39 @@ export default function Header() {
               inputProps={{ 'aria-label': 'search' }}
             />
           </Search>
-            
 
-          <Box sx={{ flexGrow: 0 }}>
-          <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '20px' }}>
-            {isUserLoggedIn ? oidcTokens.decodedIdToken.preferred_username : ''}
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {isUserLoggedIn ? oidcTokens.decodedIdToken.email : ''}
-          </Typography>
+          <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
+            {isUserLoggedIn && (
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+
+                <IconButton
+                size="large"
+                edge="end"
+                aria-label="account of current user"
+                aria-controls={menuId}
+                aria-haspopup="true"
+                onClick={handleProfileMenuOpen}
+                color="inherit"
+                >
+                <AccountCircle />
+
+                {/* <Avatar alt={isUserLoggedIn ? oidcTokens.decodedIdToken.name : ''} src="/static/images/avatar/7.jpg"/> */}
+                </IconButton>
+
+                <Box sx={{ ml: 3 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {oidcTokens.decodedIdToken.preferred_username}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {oidcTokens.decodedIdToken.email}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
           </Box>
 
           <Box sx={{ flexGrow: 1 }} />
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-
             <IconButton size="large" aria-label="show 4 new mails" color="inherit">
               <Badge badgeContent={4} color="error">
                 <MailIcon />
@@ -221,31 +245,6 @@ export default function Header() {
               <Badge badgeContent={17} color="error">
                 <NotificationsIcon />
               </Badge>
-            </IconButton>
-            <IconButton
-              size="large"
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-            >
-            <Avatar alt={isUserLoggedIn ? oidcTokens.decodedIdToken.name : ''} src="/static/images/avatar/7.jpg"/>
-            </IconButton>            
-
-          <OptionsMenu />
-          </Box>
-          <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
-            <IconButton
-              size="large"
-              aria-label="show more"
-              aria-controls={mobileMenuId}
-              aria-haspopup="true"
-              onClick={handleMobileMenuOpen}
-              color="inherit"
-            >
-              <MoreIcon />
             </IconButton>
           </Box>
         </Toolbar>

@@ -9,6 +9,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import theme from "./styles/theme";
 import App from "./App";
 
+import { StyledEngineProvider } from '@mui/material/styles';
 
 
 

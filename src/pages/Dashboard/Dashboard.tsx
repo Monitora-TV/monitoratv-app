@@ -7,13 +7,13 @@ import MonitoraCriancaExpostaHIVPage from '../MonitoraCriancaExpostaHiv/Monitora
 import HighlightedCard from '@components/HighlightedCard';
 import PageViewsBarChart from '@components/PageViewsBarChart';
 import SessionsChart from '@components/SessionsChart';
-import StatCard, { StatCardProps } from '@components/StatCard';
+// import StatCard, { StatCardProps } from '@components/StatCard';
+
+import DashboardTotalCountCard, { DashboardTotalCountCardProps } from '@/components/dashboard/DashboardTotalCountCard';
 import { useOidc } from "../../oidc";
 
 
-
-
-const data: StatCardProps[] = [
+const data: DashboardTotalCountCardProps[] = [
   {
     title: 'Users',
     value: '14k',
@@ -66,7 +66,7 @@ export default function Dashboard() {
       >
         {data.map((card, index) => (
           <Grid key={index} size={{ xs: 12, sm: 6, lg: 3 }}>
-            <StatCard {...card} />
+            <DashboardTotalCountCard {...card} />
           </Grid>
         ))}
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>

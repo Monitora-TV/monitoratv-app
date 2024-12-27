@@ -37,7 +37,6 @@ export type tb_usuario = {
 
 
 
-
 export type MonitoraCriancaExpostaHIV = {
   id?: number;
   id_paciente?: number;
