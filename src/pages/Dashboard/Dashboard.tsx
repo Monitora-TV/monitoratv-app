@@ -11,8 +11,10 @@ import SessionsChart from '@components/SessionsChart';
 
 import DashboardTotalCountCard, { DashboardTotalCountCardProps } from '@/components/dashboard/DashboardTotalCountCard';
 import { useOidc } from "../../oidc";
+import axiosInstance from '@/apis/axiosInstance';
 
 
+/*
 const data: DashboardTotalCountCardProps[] = [
   {
     title: 'Users',
@@ -45,10 +47,38 @@ const data: DashboardTotalCountCardProps[] = [
     ],
   },
 ];
+*/
 
 export default function Dashboard() {
 
   const { oidcTokens, goToAuthServer, backFromAuthServer } = useOidc({ assertUserLoggedIn: true });
+
+
+
+  // Criação do estado para armazenar os dados da API
+  const [data, setData] = React.useState<DashboardTotalCountCardProps[]>([]);
+
+  // Função para buscar os dados da API
+  const fetchData = async () => {
+    try {
+      const response = await axiosInstance.get("/criancaexpostahiv/count-by-desfecho");
+      // Mapeia os dados para o formato necessário para o Dashboard
+      const formattedData = response.data.map((item: any) => ({
+        title: item.no_desfecho_criancaexposta_hiv,
+        value: item.total.toString(),
+      }));
+
+      // Atualiza o estado com os dados formatados
+      setData(formattedData);
+    } catch (error) {
+      console.error("Erro ao buscar dados da API:", error);
+    }
+  };
+
+  // Chama a função fetchData quando o componente for montado
+  React.useEffect(() => {
+    fetchData();
+  }, []);  
 
 
   return (
@@ -69,9 +99,6 @@ export default function Dashboard() {
             <DashboardTotalCountCard {...card} />
           </Grid>
         ))}
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          <HighlightedCard />
-        </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <SessionsChart />
         </Grid>
