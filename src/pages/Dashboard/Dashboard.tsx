@@ -53,6 +53,9 @@ export default function Dashboard() {
 
   const { oidcTokens, goToAuthServer, backFromAuthServer } = useOidc({ assertUserLoggedIn: true });
 
+  console.log("ola")  
+
+  debugger
 
 
   // Criação do estado para armazenar os dados da API
